@@ -52,6 +52,27 @@ export interface Interaction {
   business?: { id: string; name: string }
 }
 
+export interface Audit {
+  id: string;
+  businessId: string;
+  score: number;
+  sections: any; // JSON
+  createdAt: string;
+}
+
+export interface Proposal {
+  id: string;
+  businessId: string;
+  title: string;
+  content: string;
+  value: number;
+  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED';
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  business?: { id: string; name: string };
+}
+
 export interface Task {
   id: string
   title: string
@@ -91,6 +112,19 @@ export const pipelineApi = {
   getAll: () => api.get<{ success: boolean; data: Record<Stage, Business[]>; stages: Stage[] }>('/pipeline'),
   moveCard: (id: string, stage: Stage) =>
     api.patch<{ success: boolean; data: Business }>(`/pipeline/${id}/move`, { stage }),
+}
+
+export const auditApi = {
+  getLatest: (businessId: string) => api.get(`/audits/${businessId}`),
+  create: (businessId: string, sections: any) => api.post(`/audits/${businessId}`, { sections })
+}
+
+export const proposalApi = {
+  getAll: (businessId?: string) => api.get('/proposals', { params: { businessId } }),
+  getById: (id: string) => api.get(`/proposals/${id}`),
+  create: (data: Partial<Proposal>) => api.post('/proposals', data),
+  update: (id: string, data: Partial<Proposal>) => api.patch(`/proposals/${id}`, data),
+  delete: (id: string) => api.delete(`/proposals/${id}`)
 }
 
 export const interactionApi = {

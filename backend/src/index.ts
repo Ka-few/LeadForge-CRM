@@ -10,6 +10,7 @@ import interactionRoutes from './routes/interaction.routes'
 import dashboardRoutes from './routes/dashboard.routes'
 import auditRoutes from './routes/audit.routes'
 import taskRoutes from './routes/task.routes'
+import proposalRoutes from './routes/proposal.routes'
 import { errorHandler } from './middleware/errorHandler'
 import { protect } from './middleware/auth.middleware'
 
@@ -38,7 +39,8 @@ app.use('/api/pipeline', protect, pipelineRoutes)
 app.use('/api/interactions', protect, interactionRoutes)
 app.use('/api/dashboard', protect, dashboardRoutes)
 app.use('/api/audits', protect, auditRoutes)
-app.use('/api/tasks', taskRoutes) // has own protect middleware
+app.use('/api/proposals', proposalRoutes) // protected internally via router.use
+app.use('/api/tasks', taskRoutes) // protected internally via router.use
 
 // Global Error Handler
 app.use(errorHandler)

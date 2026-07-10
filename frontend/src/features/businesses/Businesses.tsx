@@ -2,14 +2,16 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
+import { api } from "@/lib/api"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Filter, MoreHorizontal, ExternalLink, Plus, RefreshCw } from "lucide-react"
+import { Search, Filter, MoreHorizontal, ExternalLink, Plus, RefreshCw, Download } from "lucide-react"
 import { businessApi, Business, Stage } from "@/services/api.service"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import BusinessFormModal from "@/components/BusinessFormModal"
 
 const stageColors: Record<Stage, string> = {
   RESEARCH: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
@@ -52,6 +54,7 @@ function SkeletonRow() {
 export default function Businesses() {
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [modalOpen, setModalOpen] = useState(false)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -87,10 +90,34 @@ export default function Businesses() {
             {isLoading ? "Loading..." : `${total} business${total !== 1 ? 'es' : ''} in your database`}
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0 gap-2">
-          <Plus className="h-4 w-4" /> Add Business
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                const response = await api.get('/businesses/export', { responseType: 'blob' })
+                const url = window.URL.createObjectURL(new Blob([response.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', 'leadforge_businesses.csv')
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+              } catch (err) {
+                toast.error('Failed to export CSV')
+              }
+            }}
+            className="gap-2 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
+          <Button onClick={() => setModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0 gap-2">
+            <Plus className="h-4 w-4" /> Add Business
+          </Button>
+        </div>
       </div>
+
+      <BusinessFormModal open={modalOpen} onClose={() => setModalOpen(false)} />
 
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-3">

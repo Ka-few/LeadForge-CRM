@@ -17,6 +17,8 @@ import Pipeline from "./features/crm/Pipeline"
 import Tasks from "./features/tasks/Tasks"
 import Reports from "./features/reports/Reports"
 import AuditForm from "./features/audit/AuditForm"
+import Settings from "./features/settings/Settings"
+import ProposalForm from "./features/proposals/ProposalForm"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +65,9 @@ function App() {
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/audit/:businessId" element={<AuditForm />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/proposals/new/:businessId" element={<ProposalForm />} />
+                    <Route path="/proposals/:id" element={<ProposalForm />} />
                   </Routes>
                 </PageWrapper>
               </PrivateRoute>

@@ -1,22 +1,23 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { businessApi, interactionApi, Business, Interaction } from '@/services/api.service'
+import type { Business, Interaction } from '@/services/api.service'
+import { businessApi, interactionApi, proposalApi } from '@/services/api.service'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-  ArrowLeft, Globe, Facebook, Instagram, Linkedin,
-  Phone, Mail, MapPin, Tag, Star, PhoneCall, MessageSquare,
-  Calendar, FileText, Video, BriefcaseBusiness, Plus, CheckCircle
+  ArrowLeft, Globe, Phone, Mail, MapPin, Tag, Star, PhoneCall, MessageSquare,
+  Calendar, FileText, Video, BriefcaseBusiness, Plus, CheckCircle, Edit, Link2
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import BusinessFormModal from '@/components/BusinessFormModal'
 
-const TABS = ['Overview', 'Timeline', 'Contacts', 'Tasks', 'Audit'] as const
+const TABS = ['Overview', 'Timeline', 'Contacts', 'Tasks', 'Proposals', 'Audit'] as const
 type Tab = typeof TABS[number]
 
 const INTERACTION_ICONS: Record<string, React.ReactNode> = {
@@ -48,8 +49,10 @@ const WEBSITE_STATUS_LABELS: Record<string, { label: string; color: string }> = 
 
 export default function BusinessProfile() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('Overview')
   const [showAddInteraction, setShowAddInteraction] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [interactionType, setInteractionType] = useState('CALL')
   const [interactionNotes, setInteractionNotes] = useState('')
   const [interactionOutcome, setInteractionOutcome] = useState('')
@@ -70,17 +73,23 @@ export default function BusinessProfile() {
   const { data: tasksData } = useQuery({
     queryKey: ['tasks', id],
     queryFn: () => api.get<{ success: boolean; data: any[] }>('/tasks', { params: { businessId: id } }).then(r => r.data.data),
-    enabled: !!id,
+    enabled: activeTab === 'Tasks',
   })
 
   const { data: auditData } = useQuery({
     queryKey: ['audit', id],
     queryFn: () => api.get<{ success: boolean; data: any }>(`/audits/${id}`).then(r => r.data.data),
-    enabled: !!id,
+    enabled: activeTab === 'Audit',
+  })
+
+  const { data: proposals } = useQuery({
+    queryKey: ['proposals', id],
+    queryFn: () => proposalApi.getAll(id!).then(res => res.data.data),
+    enabled: activeTab === 'Proposals'
   })
 
   const addInteractionMutation = useMutation({
-    mutationFn: () => interactionApi.create({ type: interactionType, notes: interactionNotes, outcome: interactionOutcome, businessId: id }),
+    mutationFn: () => interactionApi.create({ type: interactionType, notes: interactionNotes, outcome: interactionOutcome, businessId: id! }),
     onSuccess: () => {
       toast.success('Interaction recorded')
       queryClient.invalidateQueries({ queryKey: ['interactions', id] })
@@ -114,25 +123,35 @@ export default function BusinessProfile() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Link to="/businesses" className="mt-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white truncate">{biz.name}</h1>
-            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', wsStatus.color)}>{wsStatus.label}</span>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <Link to="/businesses" className="mt-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white truncate">{biz.name}</h1>
+              <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', wsStatus.color)}>{wsStatus.label}</span>
+            </div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+              {[biz.industry, biz.town, biz.county].filter(Boolean).join(' · ')}
+            </p>
           </div>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-            {[biz.industry, biz.town, biz.county].filter(Boolean).join(' · ')}
-          </p>
         </div>
-        {/* Opportunity Score */}
-        <div className="flex-shrink-0 text-center">
-          <div className={`text-3xl font-black ${score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-blue-600' : 'text-neutral-400'}`}>{score}</div>
-          <div className="text-xs text-neutral-500 -mt-1">/ 100 score</div>
+
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => setEditModalOpen(true)} className="gap-2">
+            <Edit className="h-3.5 w-3.5" /> Edit Business
+          </Button>
+          {/* Opportunity Score */}
+          <div className="flex-shrink-0 text-center">
+            <div className={`text-3xl font-black ${score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-blue-600' : 'text-neutral-400'}`}>{score}</div>
+            <div className="text-xs text-neutral-500 -mt-1">/ 100 score</div>
+          </div>
         </div>
       </div>
+
+      <BusinessFormModal open={editModalOpen} onClose={() => setEditModalOpen(false)} business={biz} />
 
       {/* Tabs */}
       <div className="border-b border-neutral-200 dark:border-neutral-800">
@@ -164,9 +183,9 @@ export default function BusinessProfile() {
               <CardHeader><CardTitle className="text-sm font-semibold">Business Details</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {biz.website && <InfoRow icon={Globe} label="Website" value={biz.website} />}
-                {biz.facebook && <InfoRow icon={Facebook} label="Facebook" value={biz.facebook} />}
-                {biz.instagram && <InfoRow icon={Instagram} label="Instagram" value={biz.instagram} />}
-                {biz.linkedin && <InfoRow icon={Linkedin} label="LinkedIn" value={biz.linkedin} />}
+                {biz.facebook && <a href={biz.facebook} className="text-neutral-400 hover:text-blue-600"><Link2 className="h-4 w-4" /></a>}
+                {biz.instagram && <a href={biz.instagram} className="text-neutral-400 hover:text-pink-600"><Link2 className="h-4 w-4" /></a>}
+                {biz.linkedin && <a href={biz.linkedin} className="text-neutral-400 hover:text-blue-700"><Link2 className="h-4 w-4" /></a>}
                 {biz.town && <InfoRow icon={MapPin} label="Location" value={`${biz.town}${biz.county ? `, ${biz.county}` : ''}`} />}
                 {biz.tags?.length > 0 && (
                   <div className="flex items-start gap-3 pt-1">
@@ -237,7 +256,15 @@ export default function BusinessProfile() {
                     ))}
                   </div>
                   <Input placeholder="Notes (what was discussed?)" value={interactionNotes} onChange={e => setInteractionNotes(e.target.value)} className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800" />
-                  <Input placeholder="Outcome (e.g. Interested, Needs follow-up)" value={interactionOutcome} onChange={e => setInteractionOutcome(e.target.value)} className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800" />
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300">Outcome / Notes</label>
+                    <textarea 
+                      value={interactionOutcome}
+                      onChange={(e: any) => setInteractionOutcome(e.target.value)}
+                      className="mt-1 block w-full rounded-md border border-neutral-200 dark:border-neutral-800 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-blue-600 min-h-[80px]"
+                      placeholder="What happened during this interaction?"
+                    />
+                  </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => addInteractionMutation.mutate()} disabled={addInteractionMutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">Save</Button>
                     <Button size="sm" variant="ghost" onClick={() => setShowAddInteraction(false)}>Cancel</Button>
@@ -268,7 +295,6 @@ export default function BusinessProfile() {
                           </div>
                           {i.notes && <p className="text-sm text-neutral-700 dark:text-neutral-300">{i.notes}</p>}
                           {i.outcome && <p className="text-xs text-neutral-500 mt-1">Outcome: <span className="font-medium">{i.outcome}</span></p>}
-                          {i.nextAction && <p className="text-xs text-blue-500 mt-1">Next: {i.nextAction}</p>}
                         </CardContent>
                       </Card>
                     </div>
@@ -301,6 +327,49 @@ export default function BusinessProfile() {
                 </span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* PROPOSALS TAB */}
+        {activeTab === 'Proposals' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Proposals & Contracts</h3>
+              <Button onClick={() => navigate(`/proposals/new/${biz.id}`)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <Plus className="h-4 w-4" /> Create Proposal
+              </Button>
+            </div>
+            
+            {proposals?.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
+                <FileText className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-neutral-900 dark:text-white">No proposals yet</h3>
+                <p className="text-xs text-neutral-500 mt-1">Create a proposal to send to this client.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {proposals?.map((p: any) => (
+                  <div key={p.id} className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-5 hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative cursor-pointer" onClick={() => navigate(`/proposals/${p.id}`)}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', 
+                        p.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700' : 
+                        p.status === 'SENT' ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-600'
+                      )}>
+                        {p.status}
+                      </span>
+                    </div>
+                    <h4 className="font-semibold text-neutral-900 dark:text-white text-sm truncate">{p.title}</h4>
+                    <p className="text-lg font-bold text-neutral-900 dark:text-white mt-2">£{p.value?.toLocaleString()}</p>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Created {new Date(p.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
