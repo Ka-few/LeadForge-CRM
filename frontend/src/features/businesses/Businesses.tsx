@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +53,7 @@ export default function Businesses() {
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['businesses', debouncedSearch],
@@ -143,6 +145,7 @@ export default function Businesses() {
                   className={cn(
                     "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer group"
                   )}
+                  onClick={() => navigate(`/businesses/${b.id}`)}
                 >
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
