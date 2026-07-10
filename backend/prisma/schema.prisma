@@ -107,7 +107,9 @@ model WebsiteAudit {
 model Proposal {
   id              String   @id @default(uuid())
   title           String
+  content         String?
   value           Decimal  @default(0.00)
+  expiresAt       DateTime?
   pdfUrl          String?
   status          ProposalStatus @default(DRAFT)
   businessId      String

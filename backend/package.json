@@ -14,14 +14,17 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^6.19.3",
     "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -29,7 +32,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.10.7",
     "nodemon": "^3.1.9",
-    "prisma": "^7.8.0",
+    "prisma": "^6.19.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

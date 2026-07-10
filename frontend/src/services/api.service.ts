@@ -101,7 +101,7 @@ export const businessApi = {
   getById: (id: string) => api.get<{ success: boolean; data: Business }>(`/businesses/${id}`),
   create: (data: Partial<Business> & { contacts?: Partial<Contact>[] }) =>
     api.post<{ success: boolean; data: Business }>('/businesses', data),
-  update: (id: string, data: Partial<Business>) =>
+  update: (id: string, data: Partial<Business> & { contacts?: Partial<Contact>[] }) =>
     api.patch<{ success: boolean; data: Business }>(`/businesses/${id}`, data),
   updateStage: (id: string, stage: Stage) =>
     api.patch<{ success: boolean; data: Business }>(`/businesses/${id}/stage`, { stage }),

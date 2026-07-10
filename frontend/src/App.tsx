@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "react-hot-toast"
 import { AuthProvider } from "./context/AuthContext"
+import { ThemeProvider } from "./context/ThemeContext"
 import PrivateRoute from "./components/layout/PrivateRoute"
 import PageWrapper from "./components/layout/PageWrapper"
 
@@ -32,49 +33,51 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#18181b',
-            color: '#fafafa',
-            border: '1px solid #27272a',
-            borderRadius: '10px',
-            fontSize: '14px',
-          },
-        }}
-      />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+      <ThemeProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#18181b',
+              color: '#fafafa',
+              border: '1px solid #27272a',
+              borderRadius: '10px',
+              fontSize: '14px',
+            },
+          }}
+        />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            {/* Protected routes */}
-            <Route path="/*" element={
-              <PrivateRoute>
-                <PageWrapper>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/businesses" element={<Businesses />} />
-                    <Route path="/businesses/:id" element={<BusinessProfile />} />
-                    <Route path="/pipeline" element={<Pipeline />} />
-                    <Route path="/tasks" element={<Tasks />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/audit/:businessId" element={<AuditForm />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/proposals/new/:businessId" element={<ProposalForm />} />
-                    <Route path="/proposals/:id" element={<ProposalForm />} />
-                  </Routes>
-                </PageWrapper>
-              </PrivateRoute>
-            } />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+              {/* Protected routes */}
+              <Route path="/*" element={
+                <PrivateRoute>
+                  <PageWrapper>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/businesses" element={<Businesses />} />
+                      <Route path="/businesses/:id" element={<BusinessProfile />} />
+                      <Route path="/pipeline" element={<Pipeline />} />
+                      <Route path="/tasks" element={<Tasks />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/audit/:businessId" element={<AuditForm />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/proposals/new/:businessId" element={<ProposalForm />} />
+                      <Route path="/proposals/:id" element={<ProposalForm />} />
+                    </Routes>
+                  </PageWrapper>
+                </PrivateRoute>
+              } />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }

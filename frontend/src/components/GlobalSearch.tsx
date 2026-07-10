@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Building2, X, ArrowRight } from 'lucide-react'
-import { businessApi, Business } from '@/services/api.service'
+import type { Business } from '@/services/api.service'
+import { businessApi } from '@/services/api.service'
 import { cn } from '@/lib/utils'
 
 interface GlobalSearchProps {

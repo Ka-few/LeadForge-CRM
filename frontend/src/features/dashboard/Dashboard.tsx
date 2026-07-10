@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, TrendingUp, Calendar, CreditCard, Trophy, XCircle, FileText, PhoneCall, Mail, MessageSquare, Video, BriefcaseBusiness } from "lucide-react"
-import { dashboardApi, DashboardStats } from "@/services/api.service"
+import { Users, TrendingUp, Calendar, Trophy, XCircle, FileText, PhoneCall, Mail, MessageSquare, Video, BriefcaseBusiness } from "lucide-react"
+import type { DashboardStats } from "@/services/api.service"
+import { dashboardApi } from "@/services/api.service"
 import { motion } from "framer-motion"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
