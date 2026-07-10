@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businesses Business[]
+  interactions Interaction[]
+  tasks        Task[]
+}
+
+model Business {
+  id              String   @id @default(uuid())
+  name            String
+  industry        String?
+  website         String?
+  websiteStatus   WebsiteStatus @default(UNKNOWN)
+  facebook        String?
+  instagram       String?
+  linkedin        String?
+  address         String?
+  county          String?
+  town            String?
+  opportunityScore Int     @default(0)
+  stage           Stage    @default(RESEARCH)
+  notes           String?
+  tags            String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ownerId         String
+  owner           User     @relation(fields: [ownerId], references: [id])
+
+  contacts        Contact[]
+  interactions    Interaction[]
+  tasks           Task[]
+  audits          WebsiteAudit[]
+  proposals       Proposal[]
+}
+
+model Contact {
+  id         String   @id @default(uuid())
+  name       String
+  position   String?
+  phone      String?
+  whatsapp   String?
+  email      String?
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Interaction {
+  id         String           @id @default(uuid())
+  type       InteractionType
+  date       DateTime         @default(now())
+  notes      String?
+  outcome    String?
+  nextAction String?
+  businessId String
+  business   Business         @relation(fields: [businessId], references: [id])
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  priority    Priority  @default(MEDIUM)
+  completed   Boolean   @default(false)
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model WebsiteAudit {
+  id                   String   @id @default(uuid())
+  score                Int
+  strengths            String[]
+  weaknesses           String[]
+  recommendations      String[]
+  estimatedImpact      String?
+  pdfUrl               String?
+  businessId           String
+  business             Business @relation(fields: [businessId], references: [id])
+  createdAt            DateTime @default(now())
+}
+
+model Proposal {
+  id              String   @id @default(uuid())
+  title           String
+  value           Decimal  @default(0.00)
+  pdfUrl          String?
+  status          ProposalStatus @default(DRAFT)
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum WebsiteStatus {
+  UNKNOWN
+  NO_WEBSITE
+  OUTDATED
+  MODERN
+}
+
+enum Stage {
+  RESEARCH
+  AUDIT_COMPLETE
+  CONTACTED
+  MEETING_SCHEDULED
+  DEMO_PRESENTED
+  PROPOSAL_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum InteractionType {
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  PROPOSAL
+  FOLLOW_UP
+  FEEDBACK
+  DEMO
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+}
